@@ -23,7 +23,7 @@ app.post('/filmes', (req, res) => {
     const filme = {titulo: titulo, sinopse: sinopse}
     //inserir o filme novo na lista
     filmes.push(filme)
-    //só para ter certeza
+    //devolve a lista de filmes atualizada para o front
     res.send(filmes)
 })
 
