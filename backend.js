@@ -2,6 +2,8 @@ const express = require('express')
 const cors = require('cors')
 const mongoose = require('mongoose')
 require('dotenv').config()
+const uniqueValidator = require('mongoose-unique-validator')
+const bcrypt = require('bcrypt')
 const app = express()
 app.use(express.json())
 app.use(cors())
@@ -11,7 +13,14 @@ const Filme = mongoose.model("Filme", mongoose.Schema({
   sinopse: {type: String}
 }))
 
-const stringConexao = process.env.CONEXAO_DB
+const usuarioSchema = mongoose.Schema({
+  login: {type: String, required: true, unique: true},
+  password: {type: String, required: true}
+})
+usuarioSchema.plugin(uniqueValidator)
+const Usuario = mongoose.model("Usuario", usuarioSchema)
+
+const stringConexao = process.env.CONEXAO_BD
 
 async function conectarAoMongoDB () {
   await mongoose.connect(stringConexao)
@@ -28,7 +37,6 @@ app.get('/filmes', async (req, res) => {
     res.json(filmes)
 })
 
-//inserir um filme novo na lista de filmes NA MEMÓÓÓRIA
 //endpoint para inserir um filme na lista (post): http://localhost:3000/filmes
 app.post('/filmes', async (req, res) => {
     //montar um json com as informações
@@ -44,18 +52,28 @@ app.post('/filmes', async (req, res) => {
     res.json(filmes)
 })
 
-// let filmes = [
-//   {
-//     titulo: "Forrest Gump - O Contador de Histórias",
-//     sinopse:
-//       "Quarenta anos da história dos Estados Unidos, vistos pelos olhos de Forrest Gump (Tom Hanks), um rapaz com QI abaixo da média e boas intenções.",
-//   },
-//   {
-//     titulo: "Um Sonho de Liberdade",
-//     sinopse:
-//       "Em 1946, Andy Dufresne (Tim Robbins), um jovem e bem sucedido banqueiro, tem a sua vida radicalmente modificada ao ser condenado por um crime que nunca cometeu, o homicídio de sua esposa e do amante dela",
-//   },
-// ];
+//endpoint para o cadastro de usuários
+app.post('/signup', async (req, res) => {
+  try{
+    //captura o que o usuário digitou
+    const login = req.body.login
+    const password = req.body.password
+    //criptografar a senha
+    const passwordCriptografada = await bcrypt.hash(password, 10)
+    //constroi um objeto usuário de acordo com o modelo
+    const usuario = new Usuario({
+      login: login,
+      password: passwordCriptografada
+    })
+    const respostaMongo = await usuario.save()
+    console.log(respostaMongo);
+    res.status(201).end()
+  }
+  catch (exception) {
+    console.log(exception);
+    res.status(409).end()
+  }
+})
 
 app.listen(3000, () => {
   try {
