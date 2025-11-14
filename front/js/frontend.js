@@ -114,11 +114,17 @@ const fazerLogin = async () => {
             const URLcompleta = `${protocolo}${baseURL}${loginEndpoint}`
             //envia a requisição
             const response = await axios.post (URLcompleta, {login: usuarioLogin, password: passwordLogin})
-            console.log (response)
+            //console.log (response.data)
             //limpa as caixinhas
+            //armazenar o token devolvido pelo back no localStorage do navegador
+            const token = response.data.token
+            localStorage.setItem('tokenFilmes', token)
+            //opcionalmente armazenar  usuário
+            localStorage.setItem('usuarioFilmes', usuarioLogin)
             usuarioLoginInput.value = ""
             passwordLoginInput.value = ""
             exibirAlerta ('.alert-modal-login', 'Login realizado com sucesso!!!', ['show', 'alert-success'], ['d-none', 'alert-danger'], 2000)
+            esconderModal ('#modalLogin', 2000)
             //altera o status do botão de cadastrar filme
             const cadastrarFilmeButton = document.querySelector("#cadastrarFilmeButton")
             cadastrarFilmeButton.disabled = false
@@ -133,5 +139,41 @@ const fazerLogin = async () => {
     else {
         exibirAlerta ('.alert-modal-login', 'Preencha todos os campos!!!', ['show', 'alert-danger'],
             ['d-none', 'alert-success'], 2000)
+    }
+}
+function atualizaEstadoLogin() {
+    const loginLink = document.querySelector("#loginLink")
+    const cadastrarFilmeButton = document.querySelector("#cadastrarFilmeButton")
+    const token = localStorage.getItem('tokenFilmes')
+    if (token) {
+        cadastrarFilmeButton.disabled = false
+        loginLink.innerHTML = 'Logout'
+    }
+    else {
+        cadastrarFilmeButton.disabled = true
+        loginLink.innerHTML = 'Login'
+    }
+}
+function fazerLogout () {
+    //limpar o localStorage
+    localStorage.removeItem('tokenFilmes')
+    localStorage.removeItem('usuarioFilmes')
+    //desabilitar o botão de cadastro de filmes
+    let cadastrarFilmeButton = document.querySelector("#cadastrarFilmeButton")
+    cadastrarFilmeButton.disabled = true
+    //mudar o texto do navlink 
+    let loginLink = document.querySelector("#loginLink")
+    loginLink.innerHTML = "Login"
+    exibirAlerta ('.alert-logout', 'Obrigado, volte sempre!!!', ['show', 'alert-success'], ['d-none'], 2000)
+}
+
+function loginOuLogout () {
+    const loginLink = document.querySelector("#loginLink")
+    if (loginLink.innerHTML === 'Login') {
+        const modal = new bootstrap.Modal("#modalLogin")
+        modal.show()
+    }
+    else {
+        fazerLogout()
     }
 }
